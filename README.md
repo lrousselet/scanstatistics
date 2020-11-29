@@ -32,7 +32,7 @@ install.packages("scanstatistics")
 To install the development version of this package, type this instead:
 
 ``` r
-devtools::install_github("benjak/scanstatistics", ref = "develop")
+devtools::install_github("lrousselet/scanstatistics", ref = "master")
 ```
 
 What are scan statistics?
