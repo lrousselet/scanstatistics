@@ -171,6 +171,7 @@ scan_pb_poisson <- function(counts,
     class = "scanstatistic")
 }
 
+#' @export
 scan_pb_poiss <- function(counts,
                             zones,
                             population = NULL,
