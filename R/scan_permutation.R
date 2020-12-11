@@ -167,3 +167,84 @@ scan_permutation <- function(counts,
            n_mcsim = n_mcsim)),
     class = "scanstatistic")
 }
+
+scan_perm <- function(counts,
+                             zones,
+                             population = NULL,
+                             n_mcsim = 0,
+                             gumbel = FALSE,
+                             max_only = FALSE) {
+  if (is.data.frame(counts)) {
+    # Validate input -----------------------------------------------------------
+    if (any(c("time", "location", "count") %notin% names(counts))) {
+      stop("Data frame counts must have columns time, location, count")
+    }
+    counts %<>% arrange(location, -time)
+    # Create matrices ----------------------------------------------------------
+    if ("population" %in% names(counts)) {
+      population <- df_to_matrix(counts, "time", "location", "population")
+    } 
+    counts <- df_to_matrix(counts, "time", "location", "count")
+  }
+  
+  # Validate input -------------------------------------------------------------
+  if (any(as.vector(counts) != as.integer(counts))) {
+    stop("counts must be integer")
+  }
+  if (any(population <= 0)) stop("population must be positive")
+  
+  # Reshape into matrices ------------------------------------------------------
+  if (is.vector(counts)) {
+    counts <- matrix(counts, nrow = 1)
+  }
+  if (is.vector(population)) {
+    population <- matrix(population, nrow = 1)
+  }
+  
+  # Estimate baselines ---------------------------------------------------------
+  baselines <- estimate_baselines(counts, population)
+  
+  # Reverse time order: most recent first --------------------------------------
+  counts <- flipud(counts)
+  baselines <- flipud(baselines)
+  
+  if (!is.null(population)) {
+    population <- flipud(population)
+  }
+  
+  # Prepare zone arguments for C++ ---------------------------------------------
+  args <- list(counts = counts, 
+               baselines = baselines,
+               zones = unlist(zones) - 1, 
+               zone_lengths = unlist(lapply(zones, length)),
+               store_everything = !max_only,
+               num_mcsim = n_mcsim)
+  
+  # Run analysis on observed counts --------------------------------------------
+  scan <- run_scan(scan_pb_perm_cpp, args, gumbel)
+  
+  MLC_row <- scan$observed[1, ]
+  
+  MLC_out <- list(zone_number = MLC_row$zone,
+                  locations = zones[[MLC_row$zone]],
+                  duration = MLC_row$duration,
+                  score = MLC_row$score,
+                  relrisk_in = MLC_row$relrisk_in,
+                  relrisk_out = MLC_row$relrisk_out)
+  
+  structure(
+    c(list(# General
+      distribution = "non-parametric",
+      type = "population-based",
+      setting = "univariate"),
+      # MLC + analysis
+      list(MLC = MLC_out),
+      scan,
+      # Configuration
+      list(n_zones = length(zones),
+           n_locations = ncol(counts),
+           max_duration = nrow(counts),
+           n_mcsim = n_mcsim), 
+     list(counts = counts, baselines = baselines, population = population)),
+    class = "scanstatistic")
+}
