@@ -168,6 +168,7 @@ scan_permutation <- function(counts,
     class = "scanstatistic")
 }
 
+#' @export
 scan_perm <- function(counts,
                              zones,
                              population = NULL,
