@@ -203,7 +203,8 @@ scan_perm <- function(counts,
   }
   
   # Estimate baselines ---------------------------------------------------------
-  baselines <- estimate_baselines(counts, population)
+  # baselines <- estimate_baselines(counts, population)
+  baselines <- rowSums(counts) %*% colSums(counts) / sum(counts)
   
   # Reverse time order: most recent first --------------------------------------
   counts <- flipud(counts)
