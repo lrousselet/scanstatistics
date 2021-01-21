@@ -174,7 +174,7 @@ scan_perm <- function(counts,
                              population = NULL,
                              n_mcsim = 0,
                              gumbel = FALSE,
-                             max_only = FALSE
+                             max_only = FALSE,
                              period = NULL) {
   if (is.data.frame(counts)) {
     # Validate input -----------------------------------------------------------
