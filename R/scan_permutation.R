@@ -174,7 +174,8 @@ scan_perm <- function(counts,
                              population = NULL,
                              n_mcsim = 0,
                              gumbel = FALSE,
-                             max_only = FALSE) {
+                             max_only = FALSE
+                             period = NULL) {
   if (is.data.frame(counts)) {
     # Validate input -----------------------------------------------------------
     if (any(c("time", "location", "count") %notin% names(counts))) {
@@ -206,6 +207,13 @@ scan_perm <- function(counts,
   # baselines <- estimate_baselines(counts, population)
   baselines <- matrix(rowSums(counts), ncol = 1) %*% 
     matrix(colSums(counts), nrow = 1) / sum(counts)
+  
+  # Restriction on time if a period is specified
+  if(!is.null(period)){
+    counts <- counts[period,]
+    baselines <- baselines[period,]
+    population <- population[period,]
+  }
   
   # Reverse time order: most recent first --------------------------------------
   counts <- flipud(counts)
